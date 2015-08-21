@@ -1,0 +1,62 @@
+*, input {
+  box-sizing: border-box;
+  outline: none !important;
+}
+
+input:focus {
+  box-sizing: border-box;
+  outline: none !important;
+}
+
+.qa-bg {
+	display: none;
+	position: fixed;
+	left: 0;
+	top: 0;
+	height: 100%;
+	width: 100%;
+	background-color: rgba(0, 0, 0, 0.7);
+	z-index: 2000000000;
+}
+
+.qa-wn {
+	display: none;
+    position: fixed;
+    width: 500px;
+    min-height: 100px;
+    background-color: rgba(0,0,0, 0.5);
+    z-index: 20000000001;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    margin: 15% auto;	
+}
+ 
+.qa-se-bx input#qa_se_inp {
+	width: 100%;
+    display: block;
+    margin: 0;
+    font-size: 20px;
+    color: white;
+    background-color: rgba(0,0,0, 0.5);
+    border: 1px solid white;
+    border-radius: 3px;
+    padding: 10px;
+}
+
+.qa-res-bx {
+
+}
+
+.qa-res-bx .item {
+	color: white;
+	font-size: 12px;
+	padding: 15px;
+	margin: 5px 0;
+	border-bottom: 1px solid white;
+}
+
+.qa-res-bx .item.active {
+	color: blue;
+}
