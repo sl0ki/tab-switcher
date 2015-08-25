@@ -28,41 +28,34 @@ function extend() {
 
   return target;
 };
-
-// create element 
+// create element
 function ce(tagName, attr, style) {
   var el = document.createElement(tagName);
   if (attr) extend(el, attr);
   if (style) setStyle(el, style);
   return el;
 }
-
 // create element from html
 function se(html) { return ce('div', {innerHTML: html}).firstChild; };
-
 // get element by id
-function ge(el) {
-  return (typeof el == 'string' || typeof el == 'number') ? document.getElementById(el) : el;
-}
-
-// remove all children  of el
-function cl(el) {
-  while (el.firstChild) el.removeChild(el.firstChild);
-}
-
-
+function ge(el) { return (typeof el == 'string' || typeof el == 'number') ? document.getElementById(el) : el; }
+// remove all children
+function cl(el) { while (el.firstChild) el.removeChild(el.firstChild); }
 // query selector
 function qs(selector) { return document.querySelector(selector); }
-// query selector all 
+// query selector all
 function qsa(selector) { return document.querySelectorAll(selector); }
 function show(el) { return el.style.display = 'block'; }
 function hide(el) { return el.style.display = 'none'; }
 
+
+
+
 // Main Class
 
 
-function Qa (arg) {
-	var self = this;
+function QuickTabs (arg) {
+  var self = this;
   var bg;
 
   self.search = function() {
@@ -72,7 +65,7 @@ function Qa (arg) {
         extract: function(element) {
           return element.title + "~~" + element.url;
         }
-    }; 
+    };
     var res = fuzzy.filter(str, self.tabs, options)
       .map(function(item) { return item.original });
     self.renderResult(res);
@@ -83,7 +76,8 @@ function Qa (arg) {
     cl(self.items);
     for(var i = 0; i < Math.min(tabs.length, 5); i++) {
       var tab = tabs[i];
-      var item = se('<div class="item">' + tab.title + '</div>');
+      var item = se('<li class="item"><img class="icon" src="' + tab.favIconUrl + '"/><div class="title">' + tab.title + '</div><div class="link">' + tab.url + '</div></li>');
+      if (i === 0) item.classList.add('active');
       item.tab = tab;
       self.items.appendChild(item);
     };
@@ -100,10 +94,10 @@ function Qa (arg) {
     };
     // if nothing active, set first
     if (items[0] && !qs('.qa-res-bx .item.active'))  items[0].classList.add('active');
-  } 
+  }
 
   self.go = function() {
-      var selected = !qs('.qa-res-bx .item.active') || qsa('.qa-res-bx .item')[0];
+      var selected = qs('.qa-res-bx .item.active') || qsa('.qa-res-bx .item')[0];
       if (!selected) return;
       var tab = selected.tab;
       self.hide();
@@ -114,14 +108,14 @@ function Qa (arg) {
 		self.bg = se('<div class="qa-bg" id="qa_bg"></div>');
 		self.wn = se('<div class="qa-wn" id="qa_wn"> \
         <div class="qa-se-bx"><input id="qa_se_inp" type="text"></div> \
-        <div class="qa-res-bx" id="qa_res_bx"></div>\
+        <ul class="qa-res-bx" id="qa_res_bx"></ul>\
       </div>');
 		qs('body').appendChild(self.bg);
-		qs('body').appendChild(self.wn);		
+		qs('body').appendChild(self.wn);
 		setTimeout(function() {
 			self.inp = ge('qa_se_inp');
       self.items = ge('qa_res_bx');
-		});			
+		});
 	}
 
 	self.hide = function()  {
@@ -137,12 +131,12 @@ function Qa (arg) {
 			self.inp.value = '';
 			self.inp.focus();
       cl(self.items);
-		});		
+		});
 		chrome.runtime.sendMessage({ action: 'get_tabs' });
 		self.shows = true;
 	};
 
-  // bind events 
+  // bind events
 	self.bind = function() {
 
 		// recive tabs array
@@ -167,7 +161,7 @@ function Qa (arg) {
         e = e || window.event;
         if (!self.shows || e.keyCode === 40 || e.keyCode === 38 || e.keyCode === 13) return;
         if (e.target.id  === self.inp.id)  self.search();
-    };    
+    };
 	};
 
 	function __constructor(arg) {
@@ -178,13 +172,11 @@ function Qa (arg) {
 };
 
 
-// Run 
-if (!document.qa) document.qa = new Qa();
-var qa = document.qa;
-if(qa.shows) {
-	qa.hide();
+// Run
+if (!document._qt) document._qt = new QuickTabs();
+var qt = document._qt;
+if(qt.shows) {
+	qt.hide();
 } else {
-	qa.show();
+	qt.show();
 }
-
-
