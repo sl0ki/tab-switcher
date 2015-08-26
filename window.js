@@ -1,15 +1,12 @@
 // Extending object by another
 function extend() {
   var a = arguments, target = a[0] || {}, i = 1, l = a.length, deep = false, options;
-
   if (typeof target === 'boolean') {
     deep = target;
     target = a[1] || {};
     i = 2;
   }
-
   if (typeof target !== 'object' && !isFunction(target)) target = {};
-
   for (; i < l; ++i) {
     if ((options = a[i]) != null) {
       for (var name in options) {
@@ -25,7 +22,6 @@ function extend() {
       }
     }
   }
-
   return target;
 };
 // create element
@@ -51,8 +47,11 @@ function hide(el) { return el.style.display = 'none'; }
 
 
 
-// Main Class
 
+
+
+
+// Main Class
 
 function QuickTabs (arg) {
   var self = this;
@@ -60,23 +59,22 @@ function QuickTabs (arg) {
 
   self.search = function() {
     var str = self.inp.value.trim()
-    if(str.length <= 1) return;
+    if(str.length === 0) return self.renderResult(self.recentTabs);
     var options = {
         extract: function(element) {
           return element.title + "~~" + element.url;
         }
     };
-    var res = fuzzy.filter(str, self.tabs, options)
-      .map(function(item) { return item.original });
+    var res = fuzzy.filter(str, self.tabs, options).map(function(item) { return item.original });
     self.renderResult(res);
-    console.log('searching');
   };
 
   self.renderResult = function(tabs) {
     cl(self.items);
     for(var i = 0; i < Math.min(tabs.length, 5); i++) {
       var tab = tabs[i];
-      var item = se('<li class="item"><img class="icon" src="' + tab.favIconUrl + '"/><div class="title">' + tab.title + '</div><div class="link">' + tab.url + '</div></li>');
+      var favicon = tab.favIconUrl; // || some default
+      var item = se('<li class="item"><img class="icon" src="' + favicon + '"/><div class="title">' + tab.title + '</div><div class="link qt-reset">' + tab.url + '</div></li>');
       if (i === 0) item.classList.add('active');
       item.tab = tab;
       self.items.appendChild(item);
@@ -101,20 +99,20 @@ function QuickTabs (arg) {
       if (!selected) return;
       var tab = selected.tab;
       self.hide();
-      chrome.runtime.sendMessage({ action: 'activate_tab', data: {tab: tab}});
+      chrome.runtime.sendMessage({ action: 'activate_tab', data: {tab: tab} });
   };
 
 	self.create = function() {
 		self.bg = se('<div class="qa-bg" id="qa_bg"></div>');
 		self.wn = se('<div class="qa-wn" id="qa_wn"> \
-        <div class="qa-se-bx"><input id="qa_se_inp" type="text"></div> \
-        <ul class="qa-res-bx" id="qa_res_bx"></ul>\
-      </div>');
+            <div class="qa-se-bx"><input id="qa_se_inp" type="text"></div> \
+            <ul class="qa-res-bx" id="qa_res_bx"></ul>\
+        </div>');
 		qs('body').appendChild(self.bg);
 		qs('body').appendChild(self.wn);
 		setTimeout(function() {
 			self.inp = ge('qa_se_inp');
-      self.items = ge('qa_res_bx');
+            self.items = ge('qa_res_bx');
 		});
 	}
 
@@ -122,46 +120,53 @@ function QuickTabs (arg) {
 		hide(self.bg);
 		hide(self.wn);
 		self.shows = false;
+        cl(self.items);
 	}
 
 	self.show = function() {
+        chrome.runtime.sendMessage({ action: 'get_all_tabs' });
+        chrome.runtime.sendMessage({ action: 'get_recent_tabs' });
 		show(self.bg);
 		show(self.wn);
 		setTimeout(function() {
 			self.inp.value = '';
 			self.inp.focus();
-      cl(self.items);
 		});
-		chrome.runtime.sendMessage({ action: 'get_tabs' });
 		self.shows = true;
 	};
 
-  // bind events
+    // bind events
 	self.bind = function() {
 
-		// recive tabs array
-		chrome.runtime.onMessage.addListener(function(message) {
-		    self.tabs = message;
+		// recive  messages
+		chrome.runtime.onMessage.addListener(function(msg) {
+            if (msg.action === 'get_all_tabs') {
+                self.tabs = msg.data;
+            }
+            if (msg.action === 'get_recent_tabs') {
+                self.recentTabs = msg.data;
+                self.search();
+            }
 		});
 		// on press ESC
 		document.onkeydown = function(e) {
 		    e = e || window.event;
-        if (!self.shows) return;
-        console.log(e);
-        // escp press
-		    if (e.keyCode === 27 && self.shows) self.hide();
-        // navigation
-        if (e.keyCode === 40 ) self.nav(1);
-        if (e.keyCode === 38 ) self.nav(-1);
-        // go
-        if (e.keyCode === 13 ) self.go(-1);
+            if (!self.shows) return;
+            console.log(e);
+            // escp press
+    		if (e.keyCode === 27 && self.shows) self.hide();
+            // navigation
+            if (e.keyCode === 40 ) self.nav(1);
+            if (e.keyCode === 38 ) self.nav(-1);
+            // go
+            if (e.keyCode === 13 ) self.go(-1);
 		};
-    // on search input typing
-    document.onkeyup = function(e) {
-        e = e || window.event;
-        if (!self.shows || e.keyCode === 40 || e.keyCode === 38 || e.keyCode === 13) return;
-        if (e.target.id  === self.inp.id)  self.search();
-    };
+        // on search input typing
+        document.onkeyup = function(e) {
+            e = e || window.event;
+            if (!self.shows || e.keyCode === 40 || e.keyCode === 38 || e.keyCode === 13) return;
+            if (e.target.id  === self.inp.id)  self.search();
+        };
 	};
 
 	function __constructor(arg) {
@@ -175,8 +180,4 @@ function QuickTabs (arg) {
 // Run
 if (!document._qt) document._qt = new QuickTabs();
 var qt = document._qt;
-if(qt.shows) {
-	qt.hide();
-} else {
-	qt.show();
-}
+if(qt.shows) qt.hide(); else qt.show();
