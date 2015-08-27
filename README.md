@@ -1,5 +1,7 @@
 # Qick Tab Switcher  (chrome extension)
 
+[Install (from chrome webstore)](https://chrome.google.com/webstore/detail/qick-tab-switcher/piinjokkgkfeaeaphgconmhgblfjklmc?hl=ru)
+
 Press Ctr+I  or Command+I  (OS X) to open window.
 Quick Tab Switcher is a tab management browser extension for the Google Chrome web browser. 
 
