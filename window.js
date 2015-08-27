@@ -82,7 +82,7 @@ function QuickTabs (arg) {
   };
 
   self.nav = function(k) {
-    var items = qsa('.qa-res-bx .item');
+    var items = qsa('#__qt_root::shadow .qa-res-bx .item');
     for(var i = 0; i < items.length; i++ ) {
       if (items[i].classList.contains('active') && items[i + k]) {
         items[i + k].classList.add('active');
@@ -91,11 +91,11 @@ function QuickTabs (arg) {
       };
     };
     // if nothing active, set first
-    if (items[0] && !qs('.qa-res-bx .item.active'))  items[0].classList.add('active');
+    if (items[0] && !qs('#__qt_root::shadow .qa-res-bx .item.active'))  items[0].classList.add('active');
   }
 
   self.go = function() {
-      var selected = qs('.qa-res-bx .item.active') || qsa('.qa-res-bx .item')[0];
+      var selected = qs('#__qt_root::shadow .qa-res-bx .item.active') || qsa('#__qt_root::shadow .qa-res-bx .item')[0];
       if (!selected) return;
       var tab = selected.tab;
       self.hide();
@@ -103,16 +103,20 @@ function QuickTabs (arg) {
   };
 
 	self.create = function() {
+        self.host = se('<div id="__qt_root"></div>');
+        qs('body').appendChild(self.host);
+        self.root = self.host.createShadowRoot();
+        self.root.resetStyleInheritance = true; // reset document styles
 		self.bg = se('<div class="qa-bg" id="qa_bg"></div>');
 		self.wn = se('<div class="qa-wn" id="qa_wn"> \
             <div class="qa-se-bx"><input id="qa_se_inp" type="text"></div> \
             <ul class="qa-res-bx" id="qa_res_bx"></ul>\
         </div>');
-		qs('body').appendChild(self.bg);
-		qs('body').appendChild(self.wn);
+		self.root.appendChild(self.bg);
+		self.root.appendChild(self.wn);
 		setTimeout(function() {
-			self.inp = ge('qa_se_inp');
-            self.items = ge('qa_res_bx');
+			self.inp = qs('#__qt_root::shadow #qa_se_inp');
+            self.items = qs('#__qt_root::shadow #qa_res_bx');
 		});
 	}
 
@@ -137,7 +141,6 @@ function QuickTabs (arg) {
 
     // bind events
 	self.bind = function() {
-
 		// recive  messages
 		chrome.runtime.onMessage.addListener(function(msg) {
             if (msg.action === 'get_all_tabs') {
@@ -148,23 +151,19 @@ function QuickTabs (arg) {
                 self.search();
             }
 		});
-		// on press ESC
-		document.onkeydown = function(e) {
-		    e = e || window.event;
+        // key events
+		self.wn.onkeydown = function(e) {
+            e.stopPropagation();
             if (!self.shows) return;
-            console.log(e);
             // escp press
-    		if (e.keyCode === 27 && self.shows) self.hide();
+            if (e.keyCode === 27 && self.shows) { self.hide(); return; }
             // navigation
-            if (e.keyCode === 40 ) self.nav(1);
-            if (e.keyCode === 38 ) self.nav(-1);
-            // go
-            if (e.keyCode === 13 ) self.go(-1);
-		};
-        // on search input typing
-        document.onkeyup = function(e) {
-            e = e || window.event;
-            if (!self.shows || e.keyCode === 40 || e.keyCode === 38 || e.keyCode === 13) return;
+            if (e.keyCode === 40 ) { self.nav(1); return e.preventDefault(); }
+            if (e.keyCode === 38 ) { self.nav(-1); return e.preventDefault(); }
+            // go to selected tab
+            if (e.keyCode === 13 ) { self.go(); return e.preventDefault(); }
+
+            // type text
             if (e.target.id  === self.inp.id)  self.search();
         };
 	};
